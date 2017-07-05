@@ -49,6 +49,8 @@ bot = InstaBot('login', 'password',
                 unfollow_break_min = 15,
                 unfollow_break_max = 30,
                 log_mod = 0,
+                sleep_at=22,
+                sleep_time=8 * 60 * 60,
                 proxy='')
 ```
 
@@ -72,6 +74,8 @@ bot = InstaBot('login', 'password',
 | unfollow_break_max   | int | Maximum seconds for unfollow break pause             | 30                               | 60                                              |
 | log_mod              | int | logging mod                                          | 0                                | 0 log to console, 1 log to file, 2 no log.      |
 | proxy             | string | Access instagram through a proxy server              |                                  | Without authentication: proxy:port, example: 10.10.1.10:3128, with authentication: user:password@proxy:port, example: user:password@10.10.1.10:3128 |
+| sleep_at             | int | Switch bot to night mod, if argument is current hour | 22                               | 18                                              |
+| sleep_time           | int | Sleep bot, when it in night mod, for hours. Pass value in seconds only | 8 * 60 * 60    | 12 * 60 * 60                                    |
 
 #### 2) Set likes and unlike:
 How many likes set bot in one day. Default value is 1000 likes per 24 hours.
@@ -204,6 +208,10 @@ bot.like_all_exist_media(4)
 4) Modify example.py to your pleasing
 
 5) Run program `python3 example.py` or `python example.py` on Mac, Linux or Windows
+
+## How to enable night mod:
+When bot switches to night mod, it logout from account at ```sleep_at```, sleep for ```sleep_time``` hours. Than reboot bot with same arguments.
+Night mod enabled by default.
 
 ## Tested on:
 Windows - Python 3.4 & Python 2.7.11

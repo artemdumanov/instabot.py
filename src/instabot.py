@@ -10,6 +10,8 @@ import random
 import signal
 import sys
 
+from multiprocessing import Process
+
 if 'threading' in sys.modules:
     del sys.modules['threading']
 import time
@@ -135,7 +137,10 @@ class InstaBot:
                  user_blacklist={},
                  tag_blacklist=[],
                  unwanted_username_list=[],
-                 unfollow_whitelist=[]):
+                 unfollow_whitelist=[],
+                 to_cleanup=True,
+                 sleep_at=22,
+                 sleep_time=8 * 60 * 60):
 
         self.bot_start = datetime.datetime.now()
         self.unfollow_break_min = unfollow_break_min
@@ -144,6 +149,7 @@ class InstaBot:
         self.tag_blacklist = tag_blacklist
         self.unfollow_whitelist = unfollow_whitelist
         self.comment_list = comment_list
+        self.to_cleanup = to_cleanup
 
         self.time_in_day = 24 * 60 * 60
         # Like
@@ -202,7 +208,10 @@ class InstaBot:
         self.write_log(log_string)
         self.login()
         self.populate_user_blacklist()
-        signal.signal(signal.SIGTERM, self.cleanup)
+        self.night_mode(kwargs=locals(),
+                        sleep_at=sleep_at,
+                        sleep_time=sleep_time)
+        # signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
 
     def populate_user_blacklist(self):
@@ -298,8 +307,8 @@ class InstaBot:
             self.write_log("Logout error!")
 
     def cleanup(self, *_):
-        # Unfollow all bot follow
-        if self.follow_counter >= self.unfollow_counter:
+        # Unfollow all bot follow, if to_cleanup is True
+        if self.to_cleanup and self.follow_counter >= self.unfollow_counter:
             for f in self.bot_follow_list:
                 log_string = "Trying to unfollow: %s" % (f[0])
                 self.write_log(log_string)
@@ -316,6 +325,43 @@ class InstaBot:
         if (self.login_status):
             self.logout()
         exit(0)
+
+    def night_mode(self, kwargs, sleep_at=22, sleep_time=8*60*60):
+        '''
+        Activate night mode in sleep_at fo sleep_time with settings as kwargs
+        :param int sleep_at: Sleep bot at this hour. Count starts from 0!
+        :param sleep_time: Sleep bot for N hours
+        :param dict kwargs: Boot bot with kwargs. After sleep time is over
+        Important! Strongly recommend to apply locals()!
+        :param bool to_logout: Is logout when sleep bot
+        '''
+        for validation_value in (sleep_at, sleep_time):
+            if not isinstance(validation_value, int):
+                raise ValueError("arg sleep_at or sleep_time "
+                                 "must be an integer type")
+
+        if sleep_at > 23:
+            raise ValueError("arg sleep_at must be in range of 0 to 23")
+
+        def random_from_ranged_extremums(value, percentage):
+            extremums = (value - int(value / percentage),
+                         value + int(value / percentage))
+            random_value = random.randint(*extremums)
+            return random_value
+
+        def p():
+            while True:
+                current_hour = datetime.datetime.now().hour
+                if random_from_ranged_extremums(sleep_at, 20) == current_hour:
+                    self.write_log("Start night mode at %s for %s hours" %
+                                   (sleep_at, sleep_time))
+                    self.cleanup()
+                    time.sleep(random_from_ranged_extremums(sleep_time, 20))
+                    self.write_log("Wake up from night mode")
+                    self.__init__(**kwargs)
+                time.sleep(60)
+
+        Process(target=p).start()
 
     def get_media_id_by_tag(self, tag):
         """ Get media ID set, by your hashtag """
