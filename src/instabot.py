@@ -22,7 +22,7 @@ from userinfo import UserInfo
 
 class InstaBot:
     """
-    Instagram bot v 1.1.0
+    Instagram bot v 1.1.1
     like_per_day=1000 - How many likes set bot in one day.
 
     media_max_like=0 - Don't like media (photo or video) if it have more than
@@ -138,9 +138,9 @@ class InstaBot:
                  tag_blacklist=[],
                  unwanted_username_list=[],
                  unfollow_whitelist=[],
-                 to_cleanup=True,
                  sleep_at=22,
-                 sleep_time=8 * 60 * 60):
+                 sleep_time=8 * 60 * 60,
+                 to_cleanup=True):
 
         self.bot_start = datetime.datetime.now()
         self.unfollow_break_min = unfollow_break_min
@@ -203,7 +203,7 @@ class InstaBot:
         self.media_by_user = []
         self.unwanted_username_list = unwanted_username_list
         now_time = datetime.datetime.now()
-        log_string = 'Instabot v1.1.0 started at %s:\n' % \
+        log_string = 'Instabot v1.1.1 started at %s:\n' % \
                      (now_time.strftime("%d.%m.%Y %H:%M"))
         self.write_log(log_string)
         self.login()
@@ -211,7 +211,7 @@ class InstaBot:
         self.night_mode(kwargs=locals(),
                         sleep_at=sleep_at,
                         sleep_time=sleep_time)
-        # signal.signal(signal.SIGTERM, self.cleanup)
+        signal.signal(signal.SIGTERM, self.cleanup)
         atexit.register(self.cleanup)
 
     def populate_user_blacklist(self):
